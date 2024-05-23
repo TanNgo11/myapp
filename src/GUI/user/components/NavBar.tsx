@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useShoppingCart } from '../../../context/ShoppingCartContext';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import SearchResultList from './SearchResultList';
 import { ProductSearchString } from '../../../models/Product';
 import { getAllProductsBySearchQuery } from '../../../api/ProductApi';
@@ -39,6 +39,14 @@ const NavBar = () => {
         }
     }, [debouncedSearchString]);
 
+    const location = useLocation();
+
+    useEffect(() => {
+        const dropdown = document.getElementById('categoryDropdown');
+        if (dropdown)
+            dropdown.classList.remove('active');
+    }, [location]);
+
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setShowResults(true);
@@ -49,11 +57,27 @@ const NavBar = () => {
         setShowResults(false);
     };
 
+    const [isMenuOpen, setMenuOpen] = useState(false);
+
+    const toggleMenu = () => {
+        setMenuOpen(!isMenuOpen);
+
+        document.body.style.overflow = isMenuOpen ? 'auto' : 'hidden';
+    };
+    const toggleDropdown = () => {
+        const dropdown = document.getElementById('categoryDropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('active');
+        }
+    };
+
 
 
     return (
         <>
+
             <div className="container-fluid fixed-top">
+
                 <div className="container topbar bg-primary d-none d-lg-block">
                     <div className="d-flex justify-content-between">
                         <div className="top-info ps-2">
@@ -76,14 +100,29 @@ const NavBar = () => {
                 <div className="container px-0">
                     <nav className="navbar navbar-light bg-white navbar-expand-xl">
                         <NavLink to="/" className="navbar-brand"><h1 className="text-primary display-6">Fruitables</h1></NavLink>
-                        <button className="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                        <button className="navbar-toggler py-2 px-3" type="button" onClick={toggleMenu} >
                             <span className="fa fa-bars text-primary"></span>
+
                         </button>
                         <div className="collapse navbar-collapse bg-white" id="navbarCollapse">
                             <div className="navbar-nav mx-auto">
                                 <NavLink to="/home" className="nav-item nav-link">Home</NavLink>
-                                <NavLink to="/category" className="nav-item nav-link">Category</NavLink>
-                                <NavLink to="/category" className="nav-item nav-link">Category</NavLink>
+                                <div className="nav-item dropdown">
+                                    <NavLink to="#" className="nav-item nav-link" id='categoryDropdown' >
+                                        Category
+                                        <span style={{ marginLeft: "6px" }}>
+                                            <i className="fas fa-angle-down" style={{ color: "#63E6BE" }}></i>
+                                        </span>
+
+                                    </NavLink>
+
+                                    <div className="dropdown-menu m-0 bg-secondary rounded-0">
+                                        <NavLink to="category/fruits" className=" my-dropdown-item nav-item nav-link" onClick={toggleDropdown}>Fruits</NavLink>
+                                        <NavLink to="category/vegetables" className=" my-dropdown-item nav-item nav-link" onClick={toggleDropdown}>Vegetables</NavLink>
+                                    </div>
+                                </div>
+
+                                {/* <NavLink to="/category" className="nav-item nav-link">Category</NavLink> */}
                                 {/* <div className="nav-item dropdown">
                                     <a href="#" className="nav-link dropdown-toggle" data-bs-toggle="dropdown">Pages</a>
                                     <div className="dropdown-menu m-0 bg-secondary rounded-0">
@@ -129,6 +168,15 @@ const NavBar = () => {
                             </div>
                         </div>
                     </nav>
+                </div >
+            </div >
+            <div className={`overlay ${isMenuOpen ? 'active' : ''}`} onClick={toggleMenu}>
+                <div className="overlay-content" onClick={e => e.stopPropagation()}>
+                    <button className="closebtn" onClick={toggleMenu}>&times;</button>
+                    <NavLink to="/home" className="nav-item nav-link" onClick={toggleMenu}>Home</NavLink>
+                    <NavLink to="/category" className="nav-item nav-link" onClick={toggleMenu}>Category</NavLink>
+                    <NavLink to="/category" className="nav-item nav-link" onClick={toggleMenu}>Category</NavLink>
+                    <NavLink to="/contact" className="nav-item nav-link" onClick={toggleMenu}>Contact</NavLink>
                 </div>
             </div>
 

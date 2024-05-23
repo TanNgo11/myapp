@@ -10,6 +10,8 @@ import { Controller, useForm } from 'react-hook-form';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
+import useCustomToast from '../../../util/UseCustomToast';
+import CategoryForm from './CreateCategoryModal';
 
 type EditProductModalProps = {
     isShow: boolean;
@@ -24,6 +26,8 @@ function EditProductModal({ isShow, onHide, productId, onProductUpdate }: EditPr
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [productStatus, setProductStatus] = useState<ProductStatus[]>([ProductStatus.ACTIVE, ProductStatus.INACTIVE]);
     const [isLoading, setIsLoading] = useState(false);
+    const showToastMessage = useCustomToast();
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
     const { control, register, handleSubmit, reset, formState: { errors }, setValue } = useForm<UpdateProductRequest>({
         mode: 'all',
         resolver: zodResolver(UpdateProductRequestSchema),
@@ -70,6 +74,7 @@ function EditProductModal({ isShow, onHide, productId, onProductUpdate }: EditPr
         try {
             const response = await getCategories();
             setCategories(response.result);
+            return true;
         } catch (error) {
             toast.error('Error fetching categories.');
             console.error('Error fetching categories:', error);
@@ -105,6 +110,8 @@ function EditProductModal({ isShow, onHide, productId, onProductUpdate }: EditPr
         if (selectedFile)
             formData.append('file', selectedFile);
 
+        console.log("data ne", data);
+
         setIsLoading(true);
         try {
             await updateProduct(formData);
@@ -117,6 +124,20 @@ function EditProductModal({ isShow, onHide, productId, onProductUpdate }: EditPr
             console.error('Error updating product:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleCategoryCreated = async (newCategory: Category) => {
+        const success = await fetchCategories();
+        if (success) {
+            console.log("new cate ne", newCategory.id);
+            setValue("categoryId", newCategory.id);
+            setShowCategoryModal(false);
+        }
+    };
+    const openCategoryModal = (value: string) => {
+        if (value === "-1") {
+            setShowCategoryModal(true);
         }
     };
 
@@ -148,10 +169,13 @@ function EditProductModal({ isShow, onHide, productId, onProductUpdate }: EditPr
                                     {...register("categoryId", {
                                         setValueAs: value => parseInt(value) || 0
                                     })}
+                                    onClick={(event) => openCategoryModal((event.target as HTMLSelectElement).value)}
                                 >
-                                    <option value="">Select a category</option>
-                                    {categories.map(category => (
-                                        <option key={category.id} value={category.id}>{category.name}</option>
+                                    <option value="0">Select category</option>
+                                    <option value="-1">Create new category</option>
+
+                                    {categories.map((category, index) => (
+                                        <option key={category.id || index} value={category.id}>{category.name}</option>
                                     ))}
                                 </select>
                                 {errors.categoryId && <div className="text-danger small">{errors.categoryId.message}</div>}
@@ -258,6 +282,11 @@ function EditProductModal({ isShow, onHide, productId, onProductUpdate }: EditPr
                     </Form>
                 </Modal.Body>
             </Modal>
+            <CategoryForm
+                show={showCategoryModal}
+                onHide={() => setShowCategoryModal(false)}
+                onCategoryCreated={handleCategoryCreated}
+            />
         </>
     );
 }

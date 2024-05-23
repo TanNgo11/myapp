@@ -11,6 +11,7 @@ import { ScrollToTop } from '../../../hooks/ScrollToTop'
 const MainLayout = () => {
     return (
         <>
+
             <ScrollToTop />
             <NavBar />
             <SearchModal />
@@ -18,6 +19,8 @@ const MainLayout = () => {
             <Outlet />
             <Footer />
             <GoToTopBtn />
+
+
         </>
     )
 }

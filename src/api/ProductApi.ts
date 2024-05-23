@@ -2,6 +2,7 @@ import axios from "axios"
 import { Category, Product, ProductSearchString, ProductType, ResponseData, ResponseData1 } from '../models/Product';
 import qs from 'qs';
 import publicApi from '../api/publicApi';
+import privateApi from "./privateApi";
 
 
 export const getProducts = async (): Promise<ResponseData<Product>> => {
@@ -107,7 +108,7 @@ export const addProduct = async (formData: FormData): Promise<ResponseData1<Prod
 export const updateProduct = async (formData: FormData): Promise<ResponseData1<Product>> => {
     try {
 
-        const response = await publicApi.put<ResponseData1<Product>>('/api/v1/products', formData, {
+        const response = await privateApi.put<ResponseData1<Product>>('/api/v1/products', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }

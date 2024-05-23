@@ -88,6 +88,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ onAddressChange }) 
                 onAddressChange(`${city?.Name}, ${district?.Name}, ${ward.Name}`);
             }
         }
+
     }, [selectedWard, selectedDistrict, selectedCity, data, onAddressChange]);
 
 

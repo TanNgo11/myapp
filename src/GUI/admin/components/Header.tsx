@@ -1,10 +1,11 @@
-import React from 'react'
 import { Link } from 'react-router-dom';
-import style from '../css/Admin.Header.module.css'
-import logo from '../logo.png'
-import profileLogo from '../profile-img.jpg'
+import { useAuth } from '../../../context/AuthContext';
+import style from '../css/Admin.Header.module.css';
+import logo from '../logo.png';
+import profileLogo from '../profile-img.jpg';
 
 const Header = () => {
+    const { user, logout } = useAuth();
 
     const toggleSidebar = () => {
         document.body.classList.toggle('toggle-sidebar');
@@ -70,20 +71,24 @@ const Header = () => {
                     <li className={`nav-item dropdown pe-3 ${style.navItem}`}>
                         <a className={`nav-link nav-profile d-flex align-items-center pe-0 ${style.navProfile}`} href="#" data-bs-toggle="dropdown">
                             <img src={profileLogo} alt="Profile" className={`rounded-circle ${style.profileImage}`} />
-                            <span className="d-none d-md-block dropdown-toggle ps-2">K. Anderson</span>
+                            <span className="d-none d-md-block dropdown-toggle ps-2">{user && user.username}</span>
                         </a>
 
                         <ul className={`dropdown-menu dropdown-menu-end dropdown-menu-arrow profile ${style.profileMenu}`}>
-                            <li className="dropdown-header">
-                                <h6>Kevin Anderson</h6>
-                                <span>Web Designer</span>
+                            <li style={{ paddingBottom: "0px" }} className="dropdown-header">
+                                <h6>{user && user.username}</h6>
+
                             </li>
                             <li><hr className="dropdown-divider" /></li>
                             <li>
-                                <Link className={`d-flex align-items-center ${style.dropdownItem}`} to="/users-profile">
-                                    <i className="bi bi-person"></i>
+                                <a style={{ cursor: 'pointer' }} className={`my-dropdown-item dropdown-header d-flex align-items-center ${style.dropdownItem}`} >
+                                    <i className="me-2 bi bi-person"></i>
                                     <span>My Profile</span>
-                                </Link>
+                                </a>
+                                <a style={{ cursor: 'pointer' }} className={`my-dropdown-item dropdown-header d-flex align-items-center ${style.dropdownItem}`} onClick={logout}>
+                                    <i className="me-2 bi bi-box-arrow-right"></i>
+                                    <span >Logout</span>
+                                </a>
                             </li>
 
                         </ul>

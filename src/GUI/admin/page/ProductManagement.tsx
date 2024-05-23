@@ -138,23 +138,7 @@ function ProductManagement() {
         gridRef.current!.api.exportDataAsCsv({});
     }, []);
 
-    // const deleteSelected = useCallback(() => {
-    //     if (!gridRef.current) {
-    //         console.log('gridRef.current is not defined');
-    //     } else if (!gridRef.current.api) {
-    //         console.log('gridRef.current.api is not defined');
-    //     } else {
-    //         const selectedNodes = gridRef.current.api.getSelectedNodes();
-    //         const selectedData = selectedNodes.map(node => node.data).filter(Boolean) as ProductTable[];
 
-    //         console.log('Selected rows data:', selectedData);
-    //         gridRef.current.api.applyTransaction({ remove: selectedData });
-
-
-    //         const remainingNodes = gridRef.current.api.getSelectedNodes();
-    //         console.log('Remaining selected nodes:', remainingNodes);
-    //     }
-    // }, []);
 
 
     const handleDeleteSelectedProducts = async () => {

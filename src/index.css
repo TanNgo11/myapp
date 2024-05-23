@@ -10,3 +10,50 @@
 .custom-nav-dropdown .dropdown-toggle::after {
     display: none;
 }
+
+
+
+.overlay {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 100000;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.9);
+    overflow-x: hidden;
+    transition: 0.5s;
+}
+
+.overlay.active {
+    width: 100%;
+}
+
+.overlay-content {
+    position: relative;
+    top: 25%;
+    width: 100%;
+    text-align: center;
+    margin-top: 30px;
+}
+
+.overlay-content .nav-link {
+    padding: 8px;
+    text-decoration: none;
+    font-size: 25px;
+    color: white;
+    display: block;
+    transition: 0.3s;
+}
+
+.overlay-content .nav-link:hover {
+    color: #f1f1f1;
+}
+
+.closebtn {
+    position: absolute;
+    top: -227px;
+    right: 30px;
+    font-size: 40px;
+    width: 50px;
+}

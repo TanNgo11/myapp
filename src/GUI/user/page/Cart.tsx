@@ -7,10 +7,12 @@ import { Product } from '../../../models/Product';
 import { UseLocalStorage } from '../../../context/UseLocalStorage';
 import { useNavigate } from 'react-router-dom';
 import useCurrencyFormatter from '../../../hooks/useCurrencyFormatter';
+import useCustomToast from '../../../util/UseCustomToast';
 
 function Cart() {
     const [products, setProducts] = useState<Product[]>([]);
     const { cartItems } = useShoppingCart();
+    const showToast = useCustomToast();
 
     const navigate = useNavigate();
 
@@ -37,7 +39,10 @@ function Cart() {
 
 
     const handleProcessToCheckout = () => {
-        navigate('/checkout');
+        if (cartItems.length === 0) {
+            showToast("Cart is empty", 'error');
+        } else
+            navigate('/checkout');
     }
     const currentcyFormat = useCurrencyFormatter();
 

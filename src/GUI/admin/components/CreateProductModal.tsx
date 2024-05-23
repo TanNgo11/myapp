@@ -12,6 +12,7 @@ import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
 import useCustomToast from '../../../util/UseCustomToast';
 import { create } from 'lodash';
+import CategoryForm from './CreateCategoryModal';
 
 
 type CreateProductModalProps = {
@@ -27,6 +28,7 @@ function CreateProductModal({ isShow, onHide, onProductCreate }: CreateProductMo
     const [productStatus, setProductStatus] = useState<ProductStatus[]>([ProductStatus.ACTIVE, ProductStatus.INACTIVE]);
     const [isLoading, setIsLoading] = useState(false);
     const showToastMessage = useCustomToast();
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
     const { control, register, handleSubmit, reset, formState: { errors }, setValue } = useForm<ProductRequest>({
         mode: 'all',
         resolver: zodResolver(ProductRequestSchema),
@@ -51,6 +53,7 @@ function CreateProductModal({ isShow, onHide, onProductCreate }: CreateProductMo
         try {
             const response = await getCategories();
             setCategories(response.result);
+            return true;
         } catch (error) {
             toast.error('Error fetching categories.');
             console.error('Error fetching categories:', error);
@@ -70,6 +73,14 @@ function CreateProductModal({ isShow, onHide, onProductCreate }: CreateProductMo
         onHide();
 
     };
+
+    const openCategoryModal = (value: string) => {
+        if (value === "-1") {
+            setShowCategoryModal(true);
+        }
+    };
+
+
 
     const onSubmit = async (data: ProductRequest) => {
 
@@ -97,6 +108,15 @@ function CreateProductModal({ isShow, onHide, onProductCreate }: CreateProductMo
         }
     };
 
+    const handleCategoryCreated = async (newCategory: Category) => {
+        const success = await fetchCategories();
+        if (success) {
+            console.log("new cate ne", newCategory.id);
+            setValue("categoryId", newCategory.id);
+            setShowCategoryModal(false);
+        }
+    };
+
     return (
         <>
             <Modal size="xl" show={isShow} onHide={handleClose}>
@@ -119,16 +139,19 @@ function CreateProductModal({ isShow, onHide, onProductCreate }: CreateProductMo
                             </div>
                             <div className="mb-3 col-md-6">
                                 <label htmlFor="productCategory" className="form-label">Category</label>
-                                <select
+                                <select defaultValue="0"
                                     className="form-select"
                                     id="productCategory"
                                     {...register("categoryId", {
                                         setValueAs: value => parseInt(value) || 0
                                     })}
+                                    onClick={(event) => openCategoryModal((event.target as HTMLSelectElement).value)}
                                 >
-                                    <option value="">Select a category</option>
-                                    {categories.map(category => (
-                                        <option key={category.id} value={category.id}>{category.name}</option>
+                                    <option value="0">Select category</option>
+                                    <option value="-1">Create new category</option>
+
+                                    {categories.map((category, index) => (
+                                        <option key={category.id || index} value={category.id}>{category.name}</option>
                                     ))}
                                 </select>
                                 {errors.categoryId && <div className="text-danger small">{errors.categoryId.message}</div>}
@@ -235,6 +258,11 @@ function CreateProductModal({ isShow, onHide, onProductCreate }: CreateProductMo
                     </Form>
                 </Modal.Body>
             </Modal>
+            <CategoryForm
+                show={showCategoryModal}
+                onHide={() => setShowCategoryModal(false)}
+                onCategoryCreated={handleCategoryCreated}
+            />
         </>
     );
 }

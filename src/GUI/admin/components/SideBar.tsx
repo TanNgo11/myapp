@@ -25,27 +25,27 @@ const SideBar = () => {
                                 <span className='ms-2'>All the products</span>
                             </NavLink>
                         </li>
-                        <li style={{ padding: 10 }}>
+                        {/* <li style={{ padding: 10 }}>
                             <NavLink className={({ isActive }) => isActive ? 'link activeLink' : 'link'} style={{ fontSize: 16 }} to="/admin/products/add">
 
                                 <span className='ms-2'>Add new product</span>
                             </NavLink>
-                        </li>
+                        </li> */}
                     </ul>
                 </li>
 
                 <li className={styles.navItem}>
                     <a style={{ fontSize: 16 }} className={`${styles.navLink} collapsed`} data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
                         <i className="bi bi-journal-text"></i>
-                        <span className='ms-2' >Forms</span>
+                        <span className='ms-2' >Order Management</span>
                         <i className="bi bi-chevron-down ms-auto"></i>
                     </a>
                     <ul id="forms-nav" className={`${styles.navContentCollapse} collapse`} data-bs-parent="#sidebar-nav">
                         <li style={{ padding: 10 }}>
-                            <a style={{ fontSize: 16 }} href="forms-validation.html">
+                            <NavLink className={({ isActive }) => isActive ? 'link activeLink' : 'link'} style={{ fontSize: 16 }} to="/admin/orders" end >
 
-                                <span className='ms-2' >Form Validation</span>
-                            </a>
+                                <span className='ms-2'>All the orders</span>
+                            </NavLink>
                         </li>
                     </ul>
                 </li>

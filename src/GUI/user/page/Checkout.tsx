@@ -5,27 +5,55 @@ import { Product } from '../../../models/Product';
 import { getListProductByIds } from '../../../api/ProductApi';
 import CartItem from '../components/CartItem';
 import LocationSelector from '../../../util/LocationSelector';
-import { Order } from '../../../models/Order';
+import { Order, OrderRequest, OrderSchema } from '../../../models/Order';
 import { createOrder } from '../../../api/OrderApi';
 import useCustomToast from '../../../util/UseCustomToast';
 import useCurrencyFormatter from '../../../hooks/useCurrencyFormatter';
-const initialOrderDetail: Order = {
-    customerName: '',
-    email: '',
-    phoneNumber: '',
-    address: '',
-    note: '',
-    orderItems: []
-};
+import { useAuth } from '../../../context/AuthContext';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { User } from '../../../models/User';
+import ReactLoading from 'react-loading';
+import { useNavigate } from 'react-router-dom';
+
 
 
 const Checkout = () => {
+    const { user } = useAuth();
+
+
     const currentcyFormat = useCurrencyFormatter();
     const [products, setProducts] = useState<Product[]>([]);
     const { cartItems } = useShoppingCart();
     const [address, setAddress] = useState('');
-    const [orderDetail, setOrderDetail] = useState<Order>(initialOrderDetail);
     const showToast = useCustomToast();
+    const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
+
+
+    const { control, register, handleSubmit, reset, formState: { errors }, setValue } = useForm<OrderRequest>({
+        mode: 'all',
+        resolver: zodResolver(OrderSchema),
+        defaultValues: {
+            customerName: '',
+            email: '',
+            phoneNumber: '',
+            address: '',
+            note: '',
+            orderItems: []
+        }
+    });
+
+
+    useEffect(() => {
+        if (user)
+            setOrderDetail(user as User)
+
+        if (cartItems.length === 0) {
+            showToast("Cart is empty", 'error');
+            navigate('/cart');
+        }
+    }, [user]);
 
 
     useEffect(() => {
@@ -38,25 +66,30 @@ const Checkout = () => {
             setProducts(data.result);
         });
 
-
-
     }, [cartItems]);
+
 
     useEffect(() => {
         if (products.length > 0) {
-            setOrderDetail(prev => ({
-                ...prev,
-                orderItems: cartItems.map(item => {
-                    const productPrice = products.find(p => p.id === item.id)?.price || 0;
-                    return {
-                        productId: item.id,
-                        quantity: item.quantity,
-                        price: productPrice
-                    };
-                })
-            }));
+            const orderItems = cartItems.map(item => {
+                const product = products.find(p => p.id === item.id);
+                return {
+                    productId: item.id,
+                    quantity: item.quantity,
+                    price: product ? product.price : 0
+                };
+            });
+            setValue('orderItems', orderItems);
         }
     }, [products, cartItems]);
+
+    const setOrderDetail = (user: User) => {
+        setValue('customerName', user.firstName + ' ' + user.lastName);
+        setValue('email', user.email);
+        setValue('phoneNumber', user.phoneNumber);
+        setValue('address', user.address);
+    }
+
 
     const subtotal = useMemo(() => {
 
@@ -67,96 +100,87 @@ const Checkout = () => {
     }, [cartItems, products]);
 
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
-        const { name, value, type } = e.target as HTMLInputElement | HTMLTextAreaElement;
-        const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : false;
-        setOrderDetail(prev => ({
-            ...prev!,
-            [name]: type === 'checkbox' ? checked : value
-        }));
-    };
+    const onSubmit = async (data: OrderRequest) => {
+        setIsLoading(true);
+        console.log(data)
+        try {
+            const response = await createOrder(data as Order);
+            if (response.code === 1000) {
+                showToast("Order successfully", 'success');
+                resetFormState();
+            } else {
+                showToast("Error order", 'error');
+            }
+        } catch (error) {
+            showToast("Error order", 'error');
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log('Submitting:', orderDetail);
-
-        // async function submitOrder() {
-        //     try {
-        //         const response = await createOrder(orderDetail);
-        //         console.log(response);
-        //     } catch (error) {
-        //         console.error(error);
-        //     }
-        // }
-        // submitOrder();
-        // resetDefaultAndShowMessage();
-
+        }
 
     };
 
-    function resetForm() {
-        setOrderDetail(initialOrderDetail);
-    }
-
-    function resetDefaultAndShowMessage() {
-        resetForm();
+    const resetFormState = () => {
+        reset();
         setProducts([]);
         localStorage.setItem('cartItems', JSON.stringify([]));
-        showToast('Place Order successful!', 'success');
-
-    }
+    };
 
 
     return (
         <div className="container-fluid py-5">
             <div className="container py-5">
                 <h1 className="mb-4">Billing details</h1>
-                <form action="#">
+                <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="row g-5">
                         <div className="col-md-12 col-lg-6 col-xl-7">
 
                             <div className="form-item w-100">
                                 <label className="form-label my-3">Customer Name<sup>*</sup></label>
                                 <input
-                                    value={orderDetail!.customerName}
-                                    onChange={handleChange}
-                                    name="customerName"
-                                    type="text" className="form-control" />
+                                    {...register("customerName")}
+                                    type="text" className="form-control"
+                                />
+                                {errors.customerName &&
+                                    <div className="text-danger small">{errors.customerName.message}</div>}
                             </div>
                             <div className="form-item">
                                 <label className="form-label my-3">Address <sup>*</sup></label>
                                 <LocationSelector onAddressChange={setAddress} />
                                 <input
-                                    value={orderDetail!.address}
-                                    name="address"
-                                    onChange={
-                                        handleChange
-                                    } type="text" className="form-control" placeholder='Your Address' />
+                                    {...register("address")}
+                                    value={address}
+                                    onChange={e => {
+                                        setValue("address", e.target.value);
+                                    }}
+                                    type="text" className="form-control" placeholder='Your Address'
+                                />
+                                {errors.address &&
+                                    <div className="text-danger small">{errors.address.message}</div>}
                             </div>
 
                             <div className="form-item">
                                 <label className="form-label my-3">Mobile Phone<sup>*</sup></label>
                                 <input
-                                    name="phoneNumber"
-                                    value={orderDetail!.phoneNumber}
-                                    onChange={handleChange}
-                                    type="tel" className="form-control" />
+                                    {...register("phoneNumber")}
+                                    type="tel" className="form-control"
+                                />
+                                {errors.phoneNumber &&
+                                    <div className="text-danger small">{errors.phoneNumber.message}</div>}
                             </div>
                             <div className="form-item">
                                 <label className="form-label my-3">Email<sup>*</sup></label>
                                 <input
-                                    name="email"
-                                    value={orderDetail!.email}
-                                    onChange={handleChange}
+                                    {...register("email")}
                                     type="email" className="form-control" />
+                                {errors.email &&
+                                    <div className="text-danger small">{errors.email.message}</div>}
                             </div>
                             <div className="form-item">
                                 <label className="form-label my-3">Notes</label>
                                 <textarea
-                                    name="note"
-                                    value={orderDetail!.note}
-                                    onChange={handleChange}
+                                    {...register("note")}
                                     className="form-control" spellCheck="false" cols={30} rows={11} placeholder="Order Notes (Optional)"></textarea>
+                                {errors.note &&
+                                    <div className="text-danger small">{errors.note.message}</div>}
                             </div>
                         </div>
                         <div className="col-md-12 col-lg-6 col-xl-5">
@@ -237,7 +261,7 @@ const Checkout = () => {
                                 <input className="form-check-input" type="radio" name="payment" id="payment-3" value="option3" />
                                 <label className="form-check-label" htmlFor="payment-3">PayPal</label>
                             </div>
-                            <button onClick={handleSubmit} className="Btn">
+                            <button type="submit" className="Btn">
                                 Pay
                                 <svg className="svgIcon" viewBox="0 0 576 512">
                                     <path d="M512 80c8.8 0 16 7.2 16 16v32H48V96c0-8.8 7.2-16 16-16H512zm16 144V416c0 8.8-7.2 16-16 16H64c-8.8 0-16-7.2-16-16V224H528zM64 32C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64H512c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zm56 304c-13.3 0-24 10.7-24 24s10.7 24 24 24h48c13.3 0 24-10.7 24-24s-10.7-24-24-24H120zm128 0c-13.3 0-24 10.7-24 24s10.7 24 24 24H360c13.3 0 24-10.7 24-24s-10.7-24-24-24H248z" />
@@ -245,6 +269,22 @@ const Checkout = () => {
                             </button>
                         </div>
                     </div>
+                    {isLoading && (
+                        <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            zIndex: 10
+                        }}>
+                            <ReactLoading type="spin" color="#ffebcd" height={'10%'} width={'10%'} />
+                        </div>
+                    )}
                 </form>
             </div>
         </div>
