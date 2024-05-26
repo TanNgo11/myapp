@@ -1,6 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { createContext } from "react";
 import { UseLocalStorage } from "./UseLocalStorage";
+import { Coupon } from '../models/Coupon';
+import { set } from "lodash";
 
 type ShoppingCartContext = {
     getItemQuantity: (id: number) => number;
@@ -8,8 +10,11 @@ type ShoppingCartContext = {
     decreaseItemQuantity: (id: number) => void;
     putItemInCartWithQuantity: (id: number, quantity: number) => void;
     removeItemFromCart: (id: number) => void;
+    doSetCoupon: (coupon: Coupon) => void;
+    coupon: Coupon | null;
     cartQuantity: number;
     cartItems: CartItem[];
+    clearCart: () => void;
 }
 
 const ShoppingCartContext = createContext({} as ShoppingCartContext);
@@ -31,12 +36,22 @@ export function useShoppingCart() {
 }
 
 export function ShoppingCartProvider({ children }: ShoppingCartContextProps) {
-
+    const [coupon, setCouponState] = useState<Coupon | null>(null);
 
     const [cartItems, setCartItems] = UseLocalStorage<CartItem[]>("cartItems", []);
 
     const cartQuantity = cartItems.reduce((quantity, item) => quantity + item.quantity, 0);
+    const [discount, setDiscount] = useState<number>(0);
 
+
+    // function calculateDiscount() {
+    //     if (coupon) {
+    //         const subtotal = cartItems.reduce((total, item) => total + item.quantity * getProductPrice(item.id), 0);
+    //         setDiscount(subtotal * coupon.discount);
+    //     } else {
+    //         setDiscount(0);
+    //     }
+    // }
 
     function getItemQuantity(id: number) {
         const item = cartItems.find(item => item.id === id);
@@ -49,6 +64,7 @@ export function ShoppingCartProvider({ children }: ShoppingCartContextProps) {
             if (itemIndex >= 0) {
                 const newCartItems = [...currentItems];
                 newCartItems[itemIndex] = { ...newCartItems[itemIndex], quantity: newCartItems[itemIndex].quantity + 1 };
+
                 return newCartItems;
             } else {
                 return [...currentItems, { id, quantity: 1 }];
@@ -86,6 +102,13 @@ export function ShoppingCartProvider({ children }: ShoppingCartContextProps) {
     function removeItemFromCart(id: number) {
         setCartItems(currentItems => currentItems.filter(item => item.id !== id));
     }
+    function doSetCoupon(coupon: Coupon) {
+        setCouponState(coupon);
+    }
+    function clearCart() {
+        setCartItems([]);
+    }
+
 
 
     return <ShoppingCartContext.Provider
@@ -95,8 +118,11 @@ export function ShoppingCartProvider({ children }: ShoppingCartContextProps) {
             decreaseItemQuantity,
             removeItemFromCart,
             putItemInCartWithQuantity,
+            doSetCoupon,
+            clearCart,
             cartItems,
             cartQuantity,
+            coupon
         }}>
 
         {children}

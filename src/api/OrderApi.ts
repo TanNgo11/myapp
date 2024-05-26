@@ -2,6 +2,7 @@ import axios from "axios"
 import { Order, OrderRequest, ResultOrder, OrderStatus } from '../models/Order';
 import { ResponseData, ResponseData1 } from "../models/Product";
 import privateApi from "./privateApi";
+import { SalesMonthlyData } from "../GUI/admin/page/Dashboard";
 
 export const createOrder = async (order: Order): Promise<ResponseData1<OrderRequest>> => {
     try {
@@ -57,6 +58,47 @@ export const updateOrder = async (orderId: number, status: OrderStatus): Promise
             }
         );
 
+        if (response.data.code !== 1000) throw new Error("Error");
+
+        return response.data;
+    } catch (error) {
+        console.error(error);
+
+        throw error;
+    }
+}
+
+export const getOrderByUser = async (): Promise<ResponseData<Order>> => {
+    try {
+        const response = await privateApi.get<ResponseData<Order>>(`/api/v1/orders/user`);
+        if (response.data.code !== 1000) throw new Error("Error");
+
+        return response.data;
+    } catch (error) {
+        console.error(error);
+
+        throw error;
+    }
+}
+
+
+export const getNumsOfOrderDaily = async (): Promise<ResponseData1<number>> => {
+    try {
+        const response = await privateApi.get<ResponseData1<number>>(`/api/v1/orders/daily-sales`);
+        if (response.data.code !== 1000) throw new Error("Error");
+
+        return response.data;
+    } catch (error) {
+        console.error(error);
+
+        throw error;
+    }
+}
+
+
+export const getRevenueMonthly = async (): Promise<ResponseData<SalesMonthlyData>> => {
+    try {
+        const response = await privateApi.get<ResponseData<SalesMonthlyData>>(`/api/v1/orders/monthly-sales`);
         if (response.data.code !== 1000) throw new Error("Error");
 
         return response.data;

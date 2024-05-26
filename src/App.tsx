@@ -17,6 +17,8 @@ import { Role } from './models/Role';
 import { error } from 'console';
 import OrderManagement from './GUI/admin/page/OrderManagement';
 import OrderDetails3 from './GUI/admin/components/OrderDetailModal';
+import Dashboard from './GUI/admin/page/Dashboard';
+import OrderHistory from './GUI/user/page/OrderHistory';
 
 
 
@@ -37,6 +39,12 @@ const appRoutes = [
             <Checkout />
           </RoleBasedRoute>
       },
+      {
+        path: 'user/order', element:
+          <RoleBasedRoute requiredRole={Role.USER}>
+            <OrderHistory />
+          </RoleBasedRoute>
+      },
       { path: 'detail/:slug', element: <ProductDetail /> },
       { path: 'cart', element: <Cart /> },
       { path: 'category/:categoryName', element: <MainCategory /> },
@@ -52,6 +60,7 @@ const appRoutes = [
       </RoleBasedRoute>
     ),
     children: [
+      { index: true, element: <Dashboard /> },
       { path: 'products', element: <ProductManagement /> },
       { path: 'products/add', element: <AddNewProduct /> },
       { path: 'orders', element: <OrderManagement /> },

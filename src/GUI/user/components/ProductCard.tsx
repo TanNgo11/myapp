@@ -32,8 +32,18 @@ const ProductCard = (data: Product) => {
                     <h4>{data.name}</h4>
                     <div dangerouslySetInnerHTML={{ __html: data.description }} />
                     <div className="d-flex justify-content-between flex-lg-wrap">
-                        <p className="text-dark fs-5 fw-bold mb-0">{formatCurrency(data.price)}/ kg</p>
-                        <a href="#" className="btn border border-secondary rounded-pill px-3 text-primary"><i className="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
+                        {data.salePrice < data.price ? (
+                            <>
+                                <p style={{ color: "#ec7955" }} className="fs-5 fw-bold mb-0 w-100">{formatCurrency(data.salePrice)}/ kg</p>
+                                <p style={{ textDecoration: "line-through" }} className="text-dark fs-5  mb-0">{formatCurrency(data.price)}/ kg</p>
+                            </>
+                        ) : (
+                            <>
+                                <p className="text-dark fs-5 fw-bold mb-0">{formatCurrency(data.price)}/ kg</p>
+                            </>
+                        )}
+
+                        <a href="#" className="mt-3 btn border border-secondary rounded-pill px-3 text-primary"><i className="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
                     </div>
                 </div>
             </div >

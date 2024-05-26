@@ -9,6 +9,7 @@ import useCurrencyFormatter from "../../../hooks/useCurrencyFormatter";
 type CartItemProps = {
     product: Product;
     quantity: number;
+    updateDiscount?: (discount: number) => void;
     readonly?: boolean;
 }
 
@@ -17,19 +18,26 @@ function CartItem(item: CartItemProps) {
     const [itemData, setItemData] = useState<Product>({} as Product);
     const [quantity, setQuantity] = useState<number>(1);
 
-    const { increaseItemQuantity, decreaseItemQuantity, removeItemFromCart } = useShoppingCart();
+    const { increaseItemQuantity, decreaseItemQuantity, removeItemFromCart, coupon } = useShoppingCart();
 
     useEffect(() => {
         setItemData(item.product);
         setQuantity(item.quantity)
     }, [item]);
-    const handleQuantityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newQuantity = parseInt(event.target.value, 10);
-        if (!isNaN(newQuantity) && newQuantity >= 0) {
-            setQuantity(newQuantity);
-        }
-    };
+    // const handleQuantityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    //     const newQuantity = parseInt(event.target.value, 10);
+    //     if (!isNaN(newQuantity) && newQuantity >= 0) {
+    //         setQuantity(newQuantity);
+    //     }
+    // };
 
+    const handleDescreaseQuantity = (id: number) => {
+        decreaseItemQuantity(itemData.id)
+    }
+
+    const handleIncreaseQuantity = (id: number) => {
+        increaseItemQuantity(itemData.id)
+    }
 
     const currentcyFormat = useCurrencyFormatter();
 
@@ -49,11 +57,11 @@ function CartItem(item: CartItemProps) {
             <td >
                 {!item.readonly && (
                     <div className="input-group quantity mt-4" style={{ width: '100px' }}>
-                        <button className="btn btn-sm btn-minus rounded-circle bg-light border" onClick={() => decreaseItemQuantity(itemData.id)}>
+                        <button className="btn btn-sm btn-minus rounded-circle bg-light border" onClick={() => handleDescreaseQuantity(itemData.id)}>
                             <i className="fa fa-minus"></i>
                         </button>
                         <input type="text" className="form-control form-control-sm text-center border-0" value={quantity} readOnly />
-                        <button className="btn btn-sm btn-plus rounded-circle bg-light border" onClick={() => increaseItemQuantity(itemData.id)}>
+                        <button className="btn btn-sm btn-plus rounded-circle bg-light border" onClick={() => handleIncreaseQuantity(itemData.id)}>
                             <i className="fa fa-plus"></i>
                         </button>
                     </div>

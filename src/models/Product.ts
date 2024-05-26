@@ -85,7 +85,7 @@ export type ResponseData1<T> = {
 
 export enum ProductType {
     All = "All Products",
-    Vegetables = "Vegetable",
+    Vegetables = "Vegetables",
     Fruits = "Fruits",
     Bread = "Bread",
     Meat = "Meat"

@@ -170,5 +170,19 @@ export const deleteProducts = async (ids: number[]): Promise<ResponseData1<Strin
 }
 
 
+export const getAllSalesProducts = async (): Promise<ResponseData<Product>> => {
+    try {
+        const response = await publicApi.get<ResponseData<Product>>('/api/v1/products/sales');
+        if (response.data.code !== 1000) throw new Error("Error");
+
+        return response.data;
+    } catch (error) {
+        console.error(error);
+
+        throw error;
+    }
+}
+
+
 
 

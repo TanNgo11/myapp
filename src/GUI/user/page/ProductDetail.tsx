@@ -2,7 +2,7 @@ import React, { useCallback, useEffect } from 'react'
 import { useState } from 'react';
 import { get5ProductsByCategory, getProductsBySlug } from '../../../api/ProductApi';
 
-import { Product } from '../../../models/Product';
+import { Product, ProductType } from '../../../models/Product';
 import UseFetch1 from '../../../api/UseFetch';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
@@ -16,6 +16,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import useCustomToast from '../../../util/UseCustomToast';
 import { useNavigate, useParams } from 'react-router-dom';
 import useCurrencyFormatter from '../../../hooks/useCurrencyFormatter';
+import { countProductsInCategory } from '../../../api/CategoryApi';
+import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 
 
 
@@ -44,8 +47,9 @@ const ProductDetail = () => {
     const [createRatingObject, setCreateRatingObject] = useState<RatingCreation | null>(null);
     const showToast = useCustomToast();
     const navigate = useNavigate();
-
-
+    const [categories, setCategories] = useState<ProductType[]>([ProductType.All, ProductType.Fruits, ProductType.Vegetables]);
+    const [countProducts, setCountProducts] = useState<Map<string, number>>(new Map());
+    const { user } = useAuth();
 
     useEffect(() => {
         window.scrollTo(0, 200);
@@ -78,26 +82,35 @@ const ProductDetail = () => {
         }
     }, [data, navigate, loading]);
 
-    useEffect(() => {
+    // useEffect(() => {
 
-        if (data?.category?.name) {
-            get5ProductsByCategory(data.category.name)
-                .then((response) => {
-                    setProductWithTheSameCategory(response.result);
-                })
-                .catch(error => {
-                    console.error('Error fetching products by category', error);
-                    setProductWithTheSameCategory([]);
-                });
+    //     if (data?.category?.name) {
+    //         get5ProductsByCategory(data.category.name)
+    //             .then((response) => {
+    //                 setProductWithTheSameCategory(response.result);
+    //             })
+    //             .catch(error => {
+    //                 console.error('Error fetching products by category', error);
+    //                 setProductWithTheSameCategory([]);
+    //             });
+    //     }
+    // }, [data?.category?.name]);
+
+    useEffect(() => {
+        const getCountProductsInCategory = async () => {
+            for (let category of categories) {
+                const response = await countProductsInCategory(category);
+                setCountProducts(prevCountProducts => new Map(prevCountProducts).set(category, response.result));
+            }
         }
-    }, [data?.category?.name]);
+        getCountProductsInCategory();
+    }, []);
 
     useEffect(() => {
         if (data?.id) {
             getRatingbyProductId(data.id)
                 .then((response) => {
                     setRating(response.result);
-
                 })
                 .catch((error) => {
                     console.error('Error fetching rating', error);
@@ -133,7 +146,7 @@ const ProductDetail = () => {
             const newRatingObject = {
                 rate,
                 productId: product.id,
-                userId: 1
+                userId: user?.id || 0
             };
 
             createRating(newRatingObject).then((response) => {
@@ -273,7 +286,7 @@ const ProductDetail = () => {
                                     </div>
                                     <div className="tab-pane" id="nav-mission" role="tabpanel" aria-labelledby="nav-mission-tab">
                                         <div className="d-flex">
-                                            <img src="user-assets/assets/avatar.jpg" className="img-fluid rounded-circle p-3" style={{ width: '100px', height: '100px' }} alt="" />
+                                            <img src="/user-assets/assets/avatar.jpg" className="img-fluid rounded-circle p-3" style={{ width: '100px', height: '100px' }} alt="" />
                                             <div className="">
                                                 <p className="mb-2" style={{ fontSize: '14px' }}>April 12, 2024</p>
                                                 <div className="d-flex justify-content-between">
@@ -291,7 +304,7 @@ const ProductDetail = () => {
                                             </div>
                                         </div>
                                         <div className="d-flex">
-                                            <img src="user-assets/assets/avatar.jpg" className="img-fluid rounded-circle p-3" style={{ width: '100px', height: '100px' }} alt="" />
+                                            <img src="/user-assets/assets/avatar.jpg" className="img-fluid rounded-circle p-3" style={{ width: '100px', height: '100px' }} alt="" />
                                             <div className="">
                                                 <p className="mb-2" style={{ fontSize: '14px' }}>April 12, 2024</p>
                                                 <div className="d-flex justify-content-between">
@@ -361,11 +374,11 @@ const ProductDetail = () => {
                                     <ul className="list-unstyled fruite-categorie">
 
                                         {loading ? <Skeleton width={300} count={5} /> :
-                                            productWithTheSameCategory.map((product) => (
-                                                <li key={product.id}>
+                                            categories.map((category) => (
+                                                <li key={category}>
                                                     <div className="d-flex justify-content-between fruite-name">
-                                                        <a href="#"><i className="fas fa-apple-alt me-2"></i>{product.name}</a>
-                                                        <span>({product.price})</span>
+                                                        <NavLink to={`/category/${category}`}><i className="fas fa-apple-alt me-2"></i>{category}</NavLink>
+                                                        <span>({countProducts.get(category)})</span>
                                                     </div>
                                                 </li>
                                             ))
@@ -377,7 +390,7 @@ const ProductDetail = () => {
                                 <h4 className="mb-4">Featured products</h4>
                                 <div className="d-flex align-items-center justify-content-start">
                                     <div className="rounded" style={{ width: '100px', height: '100px' }}>
-                                        <img src="user-assets/assets/featur-1.jpg" className="img-fluid rounded" alt="Image" />
+                                        <img src="/user-assets/assets/featur-1.jpg" className="img-fluid rounded" alt="Image" />
                                     </div>
                                     <div>
                                         <h6 className="mb-2">Big Banana</h6>
@@ -405,7 +418,7 @@ const ProductDetail = () => {
 
                             <div className="col-lg-12">
                                 <div className="position-relative">
-                                    <img src="user-assets/assets/banner-fruits.jpg" className="img-fluid w-100 rounded" alt="" />
+                                    <img src="/user-assets/assets/banner-fruits.jpg" className="img-fluid w-100 rounded" alt="" />
                                     <div className="position-absolute" style={{ top: '50%', right: '10px', transform: 'translateY(-50%)' }}>
                                         <h3 className="text-secondary fw-bold">Fresh <br /> Fruits <br /> Banner</h3>
                                     </div>

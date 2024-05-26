@@ -44,6 +44,7 @@ export const OrderSchema = z.object({
         .regex(/^[0-9]+$/, { message: "Phone number must contain only digits" }),
     address: z.string().min(1, { message: "Address must not be empty" }),
     note: z.string().optional(),
+    couponCode: z.string().optional(),
     orderItems: z.array(OrderItemSchema),
 });
 

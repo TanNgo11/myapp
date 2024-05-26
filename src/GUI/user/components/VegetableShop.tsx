@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Product, ProductType } from '../../../models/Product';
 import UseFetch from '../../../api/UseFetchList';
-import { getProductsByCategory } from '../../../api/ProductApi';
+import { getAllSalesProducts, getProductsByCategory } from '../../../api/ProductApi';
 import ProductCard from './ProductCard';
 import { Button } from '@mui/material';
 import { green } from '@mui/material/colors';
@@ -11,23 +11,19 @@ const VegetableShop = () => {
     const [products, setProducts] = useState<Product[]>([]);
 
     const [displayCount, setDisplayCount] = useState(4);
-
-    const fetchProducts = useCallback(() => {
-        return getProductsByCategory(ProductType.Vegetables);
-    }, [ProductType.Vegetables]);
-
-    const { data, loading, error } = UseFetch(fetchProducts);
-
+    const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
     useEffect(() => {
-
-        if (data) {
-            setProducts(data.slice(0, displayCount));
+        const fetchSalesProducts = async () => {
+            const response = await getAllSalesProducts();
+            setFilteredProducts(response.result.slice(0, displayCount));
         }
-    }, [data, displayCount]);
+        fetchSalesProducts();
+    }, [displayCount]);
+
 
     const handleLoadMore = () => {
-        const newDisplayCount = displayCount + 4;
+        const newDisplayCount = displayCount + 1;
         setDisplayCount(newDisplayCount);
     };
 
@@ -39,10 +35,11 @@ const VegetableShop = () => {
                     <h1 className="mb-3">Fresh Organic Vegetables</h1>
                     <div className="vegetable-carousel justify-content-center">
                         <div className='row'>
-                            {products.map((product => <ProductCard key={product.id} {...product} />))}
+                            {filteredProducts.map((product => <ProductCard key={product.id} {...product} />))}
                         </div>
                     </div>
-                    {products.length !== 0 && <div className="text-end mt-3">
+
+                    {(filteredProducts.length / displayCount) > 1 && <div className="text-end mt-3">
 
                         <Button variant="contained"
                             color="success"

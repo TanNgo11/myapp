@@ -15,6 +15,8 @@ import { useForm } from 'react-hook-form';
 import { User } from '../../../models/User';
 import ReactLoading from 'react-loading';
 import { useNavigate } from 'react-router-dom';
+import { getCouponByCode } from '../../../api/CouponApi';
+import { Coupon } from '../../../models/Coupon';
 
 
 
@@ -24,12 +26,13 @@ const Checkout = () => {
 
     const currentcyFormat = useCurrencyFormatter();
     const [products, setProducts] = useState<Product[]>([]);
-    const { cartItems } = useShoppingCart();
+    const { cartItems, doSetCoupon, clearCart } = useShoppingCart();
     const [address, setAddress] = useState('');
     const showToast = useCustomToast();
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
-
+    const [discount, setDiscount] = useState<number>(0);
+    const [couponCode, setCouponCode] = useState<string>("");
 
     const { control, register, handleSubmit, reset, formState: { errors }, setValue } = useForm<OrderRequest>({
         mode: 'all',
@@ -40,7 +43,8 @@ const Checkout = () => {
             phoneNumber: '',
             address: '',
             note: '',
-            orderItems: []
+            orderItems: [],
+            couponCode: ''
         }
     });
 
@@ -88,13 +92,15 @@ const Checkout = () => {
         setValue('email', user.email);
         setValue('phoneNumber', user.phoneNumber);
         setValue('address', user.address);
+
+
     }
 
 
     const subtotal = useMemo(() => {
-
         return cartItems.reduce((total, item) => {
             const product = products.find(p => p.id === item.id);
+
             return total + (product ? product.price * item.quantity : 0);
         }, 0);
     }, [cartItems, products]);
@@ -102,12 +108,13 @@ const Checkout = () => {
 
     const onSubmit = async (data: OrderRequest) => {
         setIsLoading(true);
-        console.log(data)
+
         try {
             const response = await createOrder(data as Order);
             if (response.code === 1000) {
                 showToast("Order successfully", 'success');
                 resetFormState();
+                clearCart();
             } else {
                 showToast("Error order", 'error');
             }
@@ -124,6 +131,32 @@ const Checkout = () => {
         localStorage.setItem('cartItems', JSON.stringify([]));
     };
 
+    const handleChangeCoupon = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setCouponCode(e.target.value);
+    }
+
+    const handleCountDiscount = (subtotal: number, coupon: Coupon | null) => {
+        if (!coupon) return 0;
+        setDiscount(subtotal * coupon.discount);
+    }
+
+
+
+    const applyCoupon = async (code: string) => {
+        try {
+            const response = await getCouponByCode(code);
+            if (response.code !== 1000) {
+                return;
+            }
+            setValue('couponCode', code);
+            doSetCoupon(response.result);
+            handleCountDiscount(subtotal, response.result);
+            showToast("Coupon applied", 'success');
+        } catch (error) {
+            showToast("Coupon not found", 'error');
+        }
+    }
+
 
     return (
         <div className="container-fluid py-5">
@@ -131,7 +164,7 @@ const Checkout = () => {
                 <h1 className="mb-4">Billing details</h1>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="row g-5">
-                        <div className="col-md-12 col-lg-6 col-xl-7">
+                        <div className="col-md-12 col-lg-6 col-xl-6">
 
                             <div className="form-item w-100">
                                 <label className="form-label my-3">Customer Name<sup>*</sup></label>
@@ -183,7 +216,7 @@ const Checkout = () => {
                                     <div className="text-danger small">{errors.note.message}</div>}
                             </div>
                         </div>
-                        <div className="col-md-12 col-lg-6 col-xl-5">
+                        <div className="col-md-12 col-lg-6 col-xl-6">
                             <div className="table-responsive">
                                 <table className="table">
                                     <thead>
@@ -202,8 +235,6 @@ const Checkout = () => {
                                             return <CartItem key={item.id} product={product} quantity={item.quantity} readonly={true} />;
                                         })}
 
-
-
                                         {/* <tr>
                                             <th scope="row"></th>
                                             <td className="py-5"></td>
@@ -217,22 +248,26 @@ const Checkout = () => {
                                                 </div>
                                             </td>
                                         </tr> */}
-                                        {/* <tr>
-                                            <th scope="row"></th>
-                                            <td className="py-5">
-                                                <p className="mb-0 text-dark py-4">Shipping</p>
-                                            </td>
-                                            <td colSpan={3} className="py-5">
-                                                <div className="form-check text-start">
-                                                    <input type="checkbox" className="form-check-input bg-primary border-0" id="Shipping-1" name="Shipping" value="Shipping" />
-                                                    <label className="form-check-label" htmlFor="Shipping-1">Free Shipping: $0.00</label>
+                                        <tr>
+                                            <td colSpan={12} className="py-5">
+                                                <div className="flex justify-align-content-center align-align-items-center">
+                                                    <input
+                                                        onChange={handleChangeCoupon}
+                                                        style={{ border: "none", outline: "solid 1px #81c408", paddingLeft: "10px", width: "68%" }}
+                                                        type="text"
+                                                        className="border-0 border-bottom rounded me-3 py-3 mb-4"
+                                                        placeholder="Coupon Code"
+                                                    />
+                                                    <button
+                                                        onClick={() => applyCoupon(couponCode)}
+                                                        className="btn border-secondary rounded-pill px-4 py-3 text-primary"
+                                                        type="button"
+                                                    >
+                                                        Apply Coupon
+                                                    </button>
                                                 </div>
-                                                <div className="form-check text-start">
-                                                    <input type="checkbox" className="form-check-input bg-primary border-0" id="Shipping-2" name="Shipping" value="Shipping" />
-                                                    <label className="form-check-label" htmlFor="Shipping-2">Local Pickup: $10.00</label>
-                                                </div>
                                             </td>
-                                        </tr> */}
+                                        </tr>
                                         <tr>
                                             <th scope="row"></th>
                                             <td className="py-5"></td>
@@ -242,13 +277,14 @@ const Checkout = () => {
                                             </td>
                                             <td className="py-5">
                                                 <div className="py-4 border-bottom border-top">
-                                                    <p className="mb-0 text-dark">${currentcyFormat(subtotal)}</p>
+                                                    <p className="mb-0 text-dark">${currentcyFormat(subtotal - discount)}</p>
                                                 </div>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
+
                             <div className="form-check my-3">
                                 <input className="form-check-input" type="radio" name="payment" id="payment-1" value="option1" />
                                 <label className="form-check-label" htmlFor="payment-1">Direct Bank Transfer</label>
@@ -286,8 +322,8 @@ const Checkout = () => {
                         </div>
                     )}
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
 

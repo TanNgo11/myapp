@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react'
-import { useShoppingCart } from '../../../context/ShoppingCartContext';
+import React, { useEffect, useState } from 'react';
+import { Nav, NavDropdown } from 'react-bootstrap';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import SearchResultList from './SearchResultList';
-import { ProductSearchString } from '../../../models/Product';
-import { getAllProductsBySearchQuery } from '../../../api/ProductApi';
 import { useDebounce } from 'use-debounce';
+import { getAllProductsBySearchQuery } from '../../../api/ProductApi';
 import { useAuth } from '../../../context/AuthContext';
-import { Dropdown, Nav, NavDropdown } from 'react-bootstrap';
+import { useShoppingCart } from '../../../context/ShoppingCartContext';
+import { ProductSearchString } from '../../../models/Product';
+import SearchResultList from './SearchResultList';
 
 
 
@@ -152,6 +152,7 @@ const NavBar = () => {
                                         <Nav>
                                             <NavDropdown id="nav-dropdown-dark-example " title={user.firstName}>
                                                 <NavDropdown.Item className="my-dropdown-item" >Profile</NavDropdown.Item>
+                                                <NavDropdown.Item className="my-dropdown-item" onClick={() => navigate("/user/order")} >Order History</NavDropdown.Item>
                                                 <NavDropdown.Item className="my-dropdown-item" onClick={logout}>Logout</NavDropdown.Item>
                                             </NavDropdown>
                                         </Nav>

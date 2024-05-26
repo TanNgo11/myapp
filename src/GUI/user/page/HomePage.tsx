@@ -25,9 +25,9 @@ const HomePage = () => {
             <ServiceFeature />
             <VegetableShop />
             <Banner />
-            <BestSellerSection />
+            {/* <BestSellerSection /> */}
             <FactService />
-            <CertificateSection />
+            {/* <CertificateSection /> */}
 
 
 
